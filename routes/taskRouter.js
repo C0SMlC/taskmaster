@@ -1,8 +1,11 @@
 const express = require('express');
 
 const taskController = require('./../controller/taskController.js');
+const authController = require('./../controller/authController.js');
 
 const router = express.Router();
+
+router.use(authController.protect);
 
 router.route('/').get(taskController.getTasks).post(taskController.createTask);
 
@@ -11,5 +14,7 @@ router
   .get(taskController.getTask)
   .delete(taskController.deleteTask)
   .patch(taskController.updateTask);
+
+  
 
 module.exports = router;

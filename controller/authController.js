@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { promisify } = require('util');
 
 const User = require('../model/userModel');
 
@@ -6,7 +7,7 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
 
 const signToken = (id) => {
-  return jwt.sign({ id }, JWT_SECRET_KEY, {
+  return jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 };
@@ -46,4 +47,61 @@ exports.signUp = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
-exports.login = catchAsync(async (req, res, next) => {});
+exports.login = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return next(new AppError('Please provide email and password!', 400));
+  }
+
+  const user = await User.findOne({ email }).select('+password');
+
+  if (!user || !(await user.correctPassword(password, user.password))) {
+    return next(new AppError('Incorrect email or password!', 401));
+  }
+  createSendToken(user, 200, res);
+});
+
+exports.protect = catchAsync(async (req, res, next) => {
+  // 1. Getting token and check of it's there
+
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+  // else if (req.cookies.jwt) {
+  //   token = req.cookies.jwt;
+  // }
+
+  if (!token) {
+    return next(new AppError('You are not logged in!', 401));
+  }
+
+  // 2. Verifying token
+  const decoded = await promisify(jwt.verify)(
+    token,
+    process.env.JWT_SECRET_KEY,
+  );
+
+  // 3. Check if user still exists
+  const currentUser = await User.findById(decoded.id);
+  if (!currentUser) {
+    return next(
+      new AppError('The user belonging to that token no longer exists', 401),
+    );
+  }
+
+  //  4. Check if user changed password after the token was issued
+
+  if (currentUser.changedPasswordAfter(decoded.iat)) {
+    return next(
+      new AppError('User recently changed password! Please login again.'),
+    );
+  }
+  req.user = currentUser;
+  res.locals.user = currentUser;
+
+  next();
+});

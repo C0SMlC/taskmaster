@@ -8,11 +8,13 @@ exports.getTasks = catchAsync(async (req, res, next) => {
   });
   res.status(200).json({
     status: 'success',
+    results: tasks.length,
     tasks,
   });
 });
 
 exports.createTask = catchAsync(async (req, res, next) => {
+  req.body.Assignee.push(req.user.id);
   const task = await Task.create(req.body);
   res.status(201).json({
     status: 'success',

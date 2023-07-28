@@ -4,7 +4,8 @@ const taskSchema = mongoose.Schema(
   {
     title: {
       type: String,
-      require: [true, 'Task must have a title'],
+      unique: true,
+      require: [true, 'Task must have a unique title'],
     },
     description: {
       type: String,
