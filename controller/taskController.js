@@ -63,15 +63,17 @@ exports.markTaskComplete = catchAsync(async (req, res, next) => {
     return res.status(404).json({ status: 'error', message: 'Task not found' });
   }
 
-  task.completionStatus.set(userId, 'complete');
-
-  task.completedAssigneesCount++;
-
-  if (task.completedAssigneesCount === task.Assignee.length) {
-    task.status = 'completed';
+  if (!(task.status === 'completed')) {
+    task.completionStatus.set(userId, 'complete');
+    task.completedAssigneesCount++;
+    if (task.completedAssigneesCount === task.Assignee.length) {
+      task.status = 'completed';
+    }
+    await task.save();
+    res.status(200).json({ status: 'success', task });
+  } else {
+    res
+      .status(400)
+      .json({ status: 'failed', message: 'Task already completed' });
   }
-
-  await task.save();
-
-  res.status(200).json({ status: 'success', task });
 });
