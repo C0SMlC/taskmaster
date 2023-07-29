@@ -2,10 +2,12 @@ const Task = require('../model/TaskModel');
 const catchAsync = require('../utils/catchAsync');
 
 exports.getTasks = catchAsync(async (req, res, next) => {
-  const tasks = await Task.find().populate({
-    path: 'Assignee',
-    select: 'username email',
-  });
+  const tasks = await Task.find()
+    .populate({
+      path: 'Assignee',
+      select: 'username email',
+    })
+    .select('-completionStatus -completedAssigneesCount');
   res.status(200).json({
     status: 'success',
     results: tasks.length,
@@ -14,7 +16,9 @@ exports.getTasks = catchAsync(async (req, res, next) => {
 });
 
 exports.createTask = catchAsync(async (req, res, next) => {
-  req.body.Assignee.push(req.user.id);
+  if (!req.body.Assignee.includes(req.user.id))
+    req.body.Assignee.push(req.user.id);
+
   const task = await Task.create(req.body);
   res.status(201).json({
     status: 'success',
@@ -47,4 +51,27 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
     status: 'success',
     data: null,
   });
+});
+
+exports.markTaskComplete = catchAsync(async (req, res, next) => {
+  const { taskId } = req.params;
+  const userId = req.user.id;
+
+  const task = await Task.findById(taskId);
+
+  if (!task) {
+    return res.status(404).json({ status: 'error', message: 'Task not found' });
+  }
+
+  task.completionStatus.set(userId, 'complete');
+
+  task.completedAssigneesCount++;
+
+  if (task.completedAssigneesCount === task.Assignee.length) {
+    task.status = 'completed';
+  }
+
+  await task.save();
+
+  res.status(200).json({ status: 'success', task });
 });

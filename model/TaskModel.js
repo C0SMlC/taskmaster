@@ -41,12 +41,25 @@ const taskSchema = mongoose.Schema(
       type: Date,
       default: Date.now(),
     },
+    completionStatus: {
+      type: Map,
+      of: String,
+      default: {},
+    },
+    completedAssigneesCount: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   },
 );
+
+// taskSchema.pre(/^find/, function (next) {
+
+// })
 
 const Task = mongoose.model('Task', taskSchema);
 

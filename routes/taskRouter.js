@@ -7,6 +7,8 @@ const router = express.Router();
 
 router.use(authController.protect);
 
+router.patch('/:taskId/complete', taskController.markTaskComplete);
+
 router.route('/').get(taskController.getTasks).post(taskController.createTask);
 
 router
@@ -16,5 +18,4 @@ router
   .patch(taskController.updateTask);
 
   
-
 module.exports = router;
