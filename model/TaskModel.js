@@ -4,7 +4,6 @@ const taskSchema = mongoose.Schema(
   {
     title: {
       type: String,
-      unique: true,
       require: [true, 'Task must have a unique title'],
     },
     description: {
@@ -57,9 +56,7 @@ const taskSchema = mongoose.Schema(
   },
 );
 
-// taskSchema.pre(/^find/, function (next) {
-
-// })
+taskSchema.index({ title: 1, Assignee: 1 }, { unique: true });
 
 const Task = mongoose.model('Task', taskSchema);
 

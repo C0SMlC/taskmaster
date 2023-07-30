@@ -2,7 +2,9 @@ const Task = require('../model/TaskModel');
 const catchAsync = require('../utils/catchAsync');
 
 exports.getTasks = catchAsync(async (req, res, next) => {
-  const tasks = await Task.find()
+  const tasks = await Task.find({
+    Assignee: { $in: [req.user.id] },
+  })
     .populate({
       path: 'Assignee',
       select: 'username email',
@@ -16,8 +18,11 @@ exports.getTasks = catchAsync(async (req, res, next) => {
 });
 
 exports.createTask = catchAsync(async (req, res, next) => {
-  if (!req.body.Assignee.includes(req.user.id))
+  if (!req.body.Assignee) {
+    req.body.Assignee = [req.user.id];
+  } else if (!req.body.Assignee.includes(req.user.id)) {
     req.body.Assignee.push(req.user.id);
+  }
 
   const task = await Task.create(req.body);
   res.status(201).json({
@@ -27,7 +32,7 @@ exports.createTask = catchAsync(async (req, res, next) => {
 });
 
 exports.getTask = catchAsync(async (req, res, next) => {
-  const task = await Task.findById(req.params.id).populate('Assignee');
+  const task = await Task.findById(req.user.id).populate('Assignee');
   res.status(200).json({
     status: 'success',
     data: task,

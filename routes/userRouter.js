@@ -5,11 +5,19 @@ const authController = require('../controller/authController');
 
 const router = express.Router();
 
-router.route('/').get(userController.getUsers);
-
 router.route('/signup').post(authController.signUp);
 router.route('/login').post(authController.login);
 
-router.get('/:userId/tasks', authController.protect, userController.getTasks);
+router.use(authController.protect);
+
+router.patch('/:userId', userController.update);
+router.get('/:userId/tasks', userController.getTasks);
+
+// ADMIN ACTIONS
+router.use(authController.restrictTo('admin'));
+
+router.get('/getUser/:userId', userController.getOne);
+
+router.route('/').get(userController.getUsers);
 
 module.exports = router;

@@ -39,6 +39,7 @@ const createSendToken = (user, statusCode, res) => {
 
 exports.signUp = catchAsync(async (req, res, next) => {
   const user = await User.create({
+    name: req.body.name,
     username: req.body.username,
     email: req.body.email,
     password: req.body.password,
@@ -105,3 +106,14 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   next();
 });
+
+exports.restrictTo =
+  (...roles) =>
+  (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError('You do not have permission to perform this action', 403),
+      );
+    }
+    next();
+  };

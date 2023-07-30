@@ -15,6 +15,11 @@ const userSchema = mongoose.Schema(
         message: 'Username must not contain any whitespaces',
       },
     },
+    name: {
+      type: String,
+      required: [true, 'name is required'],
+    },
+
     email: {
       type: String,
       required: [true, 'Email is required'],
@@ -49,6 +54,11 @@ const userSchema = mongoose.Schema(
       type: String,
       default: 'user',
     },
+
+    photo: {
+      type: String,
+      default: 'default.jpg',
+    },
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
@@ -63,6 +73,12 @@ userSchema.virtual('tasks', {
   ref: 'Task',
   foreignField: 'Assignee',
   localField: '_id',
+});
+
+userSchema.pre('save', function (next) {
+  this.username = this.username.toLowerCase();
+  this.email = this.email.toLowerCase();
+  next();
 });
 
 userSchema.pre('save', async function (next) {
