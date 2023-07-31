@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const User = require('../model/userModel');
 const Task = require('../model/TaskModel');
 
@@ -49,12 +51,25 @@ exports.update = catchAsync(async (req, res, next) => {
 });
 
 exports.getUserSummary = catchAsync(async (req, res, next) => {
+  // const userStats = await Task.find({
+  //   Assignee: { $in: [req.user.id] },
+  // });
+  //   console.log(req.user);
+  //   console.log(req.user.id);
+  //   console.log(await Task.find({ Assignee: req.user.id }));
+  const userId = new mongoose.Types.ObjectId(req.user.id);
+
   const userStats = await Task.aggregate([
     {
-      $unwind: '$Assignee',
+      $unwind: {
+        path: '$Assignee',
+        preserveNullAndEmptyArrays: true,
+      },
     },
     {
-      $match: { Assignee: req.user.id },
+      $match: {
+        Assignee: userId,
+      },
     },
     {
       $group: {
@@ -65,7 +80,6 @@ exports.getUserSummary = catchAsync(async (req, res, next) => {
       },
     },
   ]);
-
   res.status(200).json({
     status: 'success',
     results: userStats.length,

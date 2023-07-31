@@ -32,7 +32,7 @@ exports.createTask = catchAsync(async (req, res, next) => {
 });
 
 exports.getTask = catchAsync(async (req, res, next) => {
-  const task = await Task.findById(req.user.id).populate('Assignee');
+  const task = await Task.findById(req.params.id);
   res.status(200).json({
     status: 'success',
     data: task,
