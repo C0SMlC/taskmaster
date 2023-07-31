@@ -47,3 +47,30 @@ exports.update = catchAsync(async (req, res, next) => {
     email: reqBody.email,
   });
 });
+
+exports.getUserSummary = catchAsync(async (req, res, next) => {
+  const userStats = await Task.aggregate([
+    {
+      $unwind: '$Assignee',
+    },
+    {
+      $match: { Assignee: req.user.id },
+    },
+    {
+      $group: {
+        _id: '$status',
+        count: {
+          $sum: 1,
+        },
+      },
+    },
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    results: userStats.length,
+    data: {
+      userStats,
+    },
+  });
+});

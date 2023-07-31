@@ -11,10 +11,13 @@ router.route('/login').post(authController.login);
 router.use(authController.protect);
 
 router.patch('/:userId', userController.update);
-router.get('/:userId/tasks', userController.getTasks);
+
+router.get('/summary', userController.getUserSummary)
 
 // ADMIN ACTIONS
 router.use(authController.restrictTo('admin'));
+
+router.get('/:userId/tasks', userController.getTasks);
 
 router.get('/getUser/:userId', userController.getOne);
 

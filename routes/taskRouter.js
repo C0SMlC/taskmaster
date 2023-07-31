@@ -1,15 +1,22 @@
 const express = require('express');
 
-const taskController = require('./../controller/taskController.js');
 const authController = require('./../controller/authController.js');
+const taskController = require('./../controller/taskController.js');
 
 const router = express.Router();
 
 router.use(authController.protect);
 
-router.patch('/:taskId/complete', taskController.markTaskComplete);
+// ADMIN ACTIONS
+router.get(
+  '/getAllTasks',
+  authController.restrictTo('admin'),
+  taskController.getAllTasks,
+);
 
 router.route('/').get(taskController.getTasks).post(taskController.createTask);
+
+router.patch('/:taskId/complete', taskController.markTaskComplete);
 
 router
   .route('/:id')
@@ -17,5 +24,4 @@ router
   .delete(taskController.deleteTask)
   .patch(taskController.updateTask);
 
-  
 module.exports = router;

@@ -82,3 +82,12 @@ exports.markTaskComplete = catchAsync(async (req, res, next) => {
       .json({ status: 'failed', message: 'Task already completed' });
   }
 });
+
+exports.getAllTasks = catchAsync(async (req, res, next) => {
+  const tasks = await Task.find();
+  res.status(200).json({
+    status: 'success',
+    results: tasks.length,
+    tasks,
+  });
+});
