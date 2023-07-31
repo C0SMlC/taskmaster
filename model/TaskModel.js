@@ -49,6 +49,10 @@ const taskSchema = mongoose.Schema(
       type: Number,
       default: 0,
     },
+    hasSentEmail: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     toJSON: { virtuals: true },
