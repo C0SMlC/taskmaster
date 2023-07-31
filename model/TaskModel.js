@@ -13,7 +13,7 @@ const taskSchema = mongoose.Schema(
     status: {
       type: String,
       enum: {
-        values: ['to-do', 'in progress,', 'completed'],
+        values: ['to-do', 'in progress,', 'completed', 'failed'],
         message: 'status is either: To-Do, In Progress, Completed.',
       },
       require: [true, 'Task must have a status'],

@@ -33,6 +33,20 @@ const checkTasksAndSendEmails = async () => {
   try {
     const now = new Date();
     const dueWithin24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Add 24 hours to the current time
+
+    const dueTasks = await Task.find({
+      status: { $in: ['to-do', 'in progress'] },
+      dueDate: { $lte: now },
+    });
+
+    // Update the status of overdue tasks to "failed"
+    await Promise.all(
+      dueTasks.map(async (task) => {
+        task.status = 'failed';
+        await task.save();
+      }),
+    );
+
     const tasks = await Task.find({
       dueDate: { $lte: dueWithin24Hours },
     }).populate('Assignee');
@@ -60,7 +74,7 @@ const checkTasksAndSendEmails = async () => {
   }
 };
 
-// Schedule the task to run every hour (you can adjust the cron expression as needed)
+// Schedule the task to run every hour
 cron.schedule('* * * * *', async () => {
   try {
     await checkTasksAndSendEmails();
