@@ -1,5 +1,15 @@
 const Task = require('../model/TaskModel');
 const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/AppError');
+
+exports.isFailed = catchAsync(async (req, res, next) => {
+  const taskId = req.params.taskId || req.body.id;
+  const task = await Task.findById(taskId);
+  if (task.status === 'failed' || task.status === 'completed')
+    return next(new AppError(`This task is already ${task.status}`, 400));
+
+  next();
+});
 
 exports.getTasks = catchAsync(async (req, res, next) => {
   const tasks = await Task.find({

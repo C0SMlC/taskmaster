@@ -16,12 +16,16 @@ router.get(
 
 router.route('/').get(taskController.getTasks).post(taskController.createTask);
 
-router.patch('/:taskId/complete', taskController.markTaskComplete);
+router.patch(
+  '/:taskId/complete',
+  taskController.isFailed,
+  taskController.markTaskComplete,
+);
 
 router
   .route('/:id')
   .get(taskController.getTask)
   .delete(taskController.deleteTask)
-  .patch(taskController.updateTask);
+  .patch(taskController.isFailed, taskController.updateTask);
 
 module.exports = router;
