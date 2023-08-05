@@ -88,3 +88,23 @@ exports.getUserSummary = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.updateMe = catchAsync(async (req, res, next) => {
+  const user = await User.findByIdAndUpdate(
+    req.user.id,
+    {
+      name: req.body.name,
+      email: req.body.email,
+      photo: req.body.photo,
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+
+  res.status(200).json({
+    status: 'success',
+    user,
+  });
+});

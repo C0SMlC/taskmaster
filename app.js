@@ -11,6 +11,8 @@ const taskRouter = require('./routes/taskRouter');
 const userRouter = require('./routes/userRouter');
 
 const Task = require('./model/TaskModel');
+const User = require('./model/userModel');
+const authenticateEmail = require('./model/AuthenticationModel');
 
 const app = express();
 

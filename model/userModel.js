@@ -62,6 +62,11 @@ const userSchema = mongoose.Schema(
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
+    isActive: {
+      type: Boolean,
+      default: false,
+      select: false,
+    },
   },
   {
     toJSON: { virtuals: true },
@@ -74,6 +79,7 @@ userSchema.virtual('tasks', {
   foreignField: 'Assignee',
   localField: '_id',
 });
+
 
 userSchema.pre('save', function (next) {
   this.username = this.username.toLowerCase();

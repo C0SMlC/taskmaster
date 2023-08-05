@@ -1,10 +1,13 @@
 const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
+const crypto = require('crypto');
 
 const User = require('../model/userModel');
+const AuthenticateEmail = require('../model/AuthenticationModel');
 
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
+const sendEmail = require('../utils/Email');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
@@ -37,6 +40,25 @@ const createSendToken = (user, statusCode, res) => {
   });
 };
 
+const sendConfirmationEmail = async (user, resetURL) => {
+  const authEmail = await AuthenticateEmail.create({
+    email: user.email,
+  });
+
+  const url = `${resetURL}/${authEmail.createEmailVerificationToken()}`;
+
+  await authEmail.save({ validateBeforeSave: false });
+
+  await sendEmail({
+    email: user.email,
+    subject: 'Confirm your email',
+    message:
+      'Please confirm your email, Click Here to confirm your email\n' + url,
+  });
+
+  return;
+};
+
 exports.signUp = catchAsync(async (req, res, next) => {
   const user = await User.create({
     name: req.body.name,
@@ -45,20 +67,37 @@ exports.signUp = catchAsync(async (req, res, next) => {
     password: req.body.password,
     confirmPassword: req.body.confirmPassword,
   });
-  createSendToken(user, 200, res);
+  // createSendToken(user, 200, res);
+
+  const resetURL = `${req.protocol}://${req.get(
+    'host',
+  )}/api/v1/users/confirmEmail`;
+
+  sendConfirmationEmail(user, resetURL);
+
+  res.status(200).json({
+    status: 'success',
+    user,
+  });
 });
 
 exports.login = catchAsync(async (req, res, next) => {
-  const { email, password } = req.body;
+  const email = req.body.email.toLowerCase();
+  const { password } = req.body;
   if (!email || !password) {
     return next(new AppError('Please provide email and password!', 400));
   }
 
-  const user = await User.findOne({ email }).select('+password');
+  const user = await User.findOne({ email }).select('+password +isActive');
 
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError('Incorrect email or password!', 401));
   }
+
+  if (!user.isActive) {
+    return next(new AppError('Please confirm your account first!', 401));
+  }
+
   createSendToken(user, 200, res);
 });
 
@@ -119,3 +158,28 @@ exports.restrictTo =
     }
     next();
   };
+
+exports.confirmEmail = catchAsync(async (req, res, next) => {
+  console.log(req.params.UID);
+  const UID = crypto.createHash('sha256').update(req.params.UID).digest('hex');
+
+  const authEmail = await AuthenticateEmail.findOne({
+    UID,
+  });
+
+  const user = await User.findOneAndUpdate(
+    {
+      email: authEmail.email,
+    },
+    {
+      isActive: true,
+    },
+  );
+
+  await AuthenticateEmail.findByIdAndDelete(authEmail._id);
+
+  res.status(200).json({
+    status: 'success',
+    user,
+  });
+});
