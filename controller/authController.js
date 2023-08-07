@@ -67,7 +67,6 @@ exports.signUp = catchAsync(async (req, res, next) => {
     password: req.body.password,
     confirmPassword: req.body.confirmPassword,
   });
-  // createSendToken(user, 200, res);
 
   const resetURL = `${req.protocol}://${req.get(
     'host',
@@ -77,7 +76,8 @@ exports.signUp = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: 'success',
-    user,
+    AccountStatus: 'InActive',
+    message: 'Account created successfully, Please confirm your email.',
   });
 });
 
@@ -111,9 +111,12 @@ exports.protect = catchAsync(async (req, res, next) => {
   ) {
     token = req.headers.authorization.split(' ')[1];
   }
-  // else if (req.cookies.jwt) {
+  // else
+  // if (req.cookies.jwt) {
   //   token = req.cookies.jwt;
   // }
+
+  console.log(token);
 
   if (!token) {
     return next(new AppError('You are not logged in!', 401));
@@ -178,8 +181,5 @@ exports.confirmEmail = catchAsync(async (req, res, next) => {
 
   await AuthenticateEmail.findByIdAndDelete(authEmail._id);
 
-  res.status(200).json({
-    status: 'success',
-    user,
-  });
+  createSendToken(user, 200, res);
 });

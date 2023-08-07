@@ -11,6 +11,7 @@ router.route('/confirmEmail/:UID').get(authController.confirmEmail);
 router.route('/login').post(authController.login);
 
 router.use(authController.protect);
+
 router.patch('/').patch(userController.updateMe);
 
 router.get('/summary', userController.getUserSummary);
