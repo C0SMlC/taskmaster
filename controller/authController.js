@@ -41,22 +41,24 @@ const createSendToken = (user, statusCode, res) => {
 };
 
 const sendConfirmationEmail = async (user, resetURL) => {
-  const authEmail = await AuthenticateEmail.create({
-    email: user.email,
-  });
+  try {
+    const authEmail = await AuthenticateEmail.create({
+      email: user.email,
+    });
 
-  const url = `${resetURL}/${authEmail.createEmailVerificationToken()}`;
+    const url = `${resetURL}/${authEmail.createEmailVerificationToken()}`;
 
-  await authEmail.save({ validateBeforeSave: false });
+    await authEmail.save({ validateBeforeSave: false });
 
-  await sendEmail({
-    email: user.email,
-    subject: 'Confirm your email',
-    message:
-      'Please confirm your email, Click Here to confirm your email\n' + url,
-  });
-
-  return;
+    await sendEmail({
+      email: user.email,
+      subject: 'Confirm your email',
+      message:
+        'Please confirm your email, Click Here to confirm your email\n' + url,
+    });
+  } catch (err) {
+    console.log(`Error in  Email Sending${err}`);
+  }
 };
 
 exports.signUp = catchAsync(async (req, res, next) => {
@@ -163,7 +165,6 @@ exports.restrictTo =
   };
 
 exports.confirmEmail = catchAsync(async (req, res, next) => {
-  console.log(req.params.UID);
   const UID = crypto.createHash('sha256').update(req.params.UID).digest('hex');
 
   const authEmail = await AuthenticateEmail.findOne({
